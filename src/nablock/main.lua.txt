@@ -1,0 +1,8 @@
+--@name Nablock
+--@author Wetnab
+--@shared
+--@include /nabfw.lua.txt
+
+require( "/nabfw.lua.txt" )
+main( "nablock.Client", "nablock.Server" )
+printMessage( 2, "shiver me booty" )

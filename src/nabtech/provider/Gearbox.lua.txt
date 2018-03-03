@@ -1,0 +1,71 @@
+local c = import( "nabtech.provider.Base" ):extend()
+
+c.type = "nabtech.provider.Gearbox"
+
+if SERVER then
+	function c:ctor( name, data )
+		self.name = name
+		
+		self.chassis = data.chassis or "chip.Chassis"
+		self.podcontroller = data.podcontroller or "chip.Control Panel.Pod Controller"
+		self.driverseat = data.driverseat or ( self.chassis .. ".Driver Seat" )
+		self.engine = data.engine or ( self.chassis .. ".Engine" )
+		
+		self.automatic = data.automatic or false
+		self.shifting = false
+		
+		self.entcontroller = Nabtech.Entity.get( self.podcontroller )
+		self.entdriverseat = Nabtech.Entity.get( self.driverseat )
+		self.entengine = Nabtech.Entity.get( self.engine )
+	end
+	
+	function c:toSaveTable()
+		return {
+			chassis = self.chassis,
+			podcontroller = self.podcontroller,
+			driverseat = self.driverseat,
+			engine = self.engine,
+			automatic = self.automatic
+		}
+	end
+	
+	c.timer = {
+		[ "think" ] = { 0.2, function( self )
+			if not self.entcontroller or not self.entdriverseat or not self.entengine then return end
+			
+			local driver = self.entdriverseat.ent:getDriver()
+			if not driver:isValid() then return end
+			
+			if not self.wl then
+				self.wl = self.entcontroller.ent:getWirelink()
+			end
+			
+			if self.wl.Shift == 1 then
+				self.ent:acfClutch( 1 )
+			else
+				self.ent:acfClutch( 0 )
+			end
+			
+			if self.automatic then
+				if self.entengine.ent:acfRPM() >=  self.entengine.ent:acfPowerbandMax() then
+					self.ent:acfShiftUp()
+				elseif self.entengine.ent:acfRPM() <= self.entengine.ent:acfPowerbandMin() and self.ent:acfGear() > 1 then
+					self.ent:acfShiftDown()
+				end
+				return
+			end
+			
+			if not self.shifting and self.wl.Mouse1 == 1 and self.wl.Mouse2 == 0 then
+				self.shifting = true
+				self.ent:acfShiftUp()
+			elseif not self.shifting and self.wl.Mouse1 == 0 and self.wl.Mouse2 == 1 then
+				self.shifting = true
+				self.ent:acfShiftDown()
+			elseif self.wl.Mouse1 == 0 and self.wl.Mouse2 == 0 then
+				self.shifting = false
+			end
+		end }
+	}
+end
+
+return c

@@ -1,0 +1,6 @@
+local c = Class:extend()
+
+function c:main()
+end
+
+return c

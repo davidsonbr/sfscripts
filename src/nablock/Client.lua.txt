@@ -1,0 +1,25 @@
+local c = Class:extend()
+
+function c.draw()
+	render.selectRenderTarget("mesh")
+	render.pushViewMatrix({type="3D", x=0, y=0, w=1024, h=1024, origin=Vector(-4,0,0), angles = Angle(0,0,0), aspect=1})
+	
+	render.clear(Color(0,0,0,0),true)
+	render.enableDepth(true)
+	
+	render.draw3DBox( Vector( 0 ), Angle( timer.curtime() * 10 ), Vector( -0.5 ), Vector( 0.5 ) )
+	
+	render.popViewMatrix()
+	render.selectRenderTarget()
+	
+	render.enableDepth(false)
+	render.setRenderTargetTexture("mesh")
+	render.drawTexturedRect(0,0,512,512)
+end
+
+function c.main()
+	render.createRenderTarget( "mesh" )
+	hook.add( "render", "draw", c.draw )
+end
+
+return c

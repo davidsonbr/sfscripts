@@ -1,0 +1,110 @@
+local c = import( "nabtech.provider.Base" ):extend()
+
+c.type = "nabtech.provider.Steering"
+
+if SERVER then
+	function c:ctor( name, data )
+		self.name = name
+		
+		self.chassis = data.chassis or "chip.Chassis"
+		self.podcontroller = data.podcontroller or "chip.Control Panel.Pod Controller"
+		self.driverseat = data.driverseat or ( self.chassis .. ".Driver Seat" )
+		
+		self.max = data.max or 30
+		self.mul = data.mul or 1
+		self.increment = data.increment or 1
+		self.axis = data.axis or "y"
+		
+		self.chassisOffset = Angle( 0, 0, 0 ) or data.offset and Angle( data.offset[ 1 ], data.offset[ 2 ], data.offset[ 3 ] )
+		
+		self.turn = 0
+		self.percent = 0
+		self.offset = 0
+		
+		self.entchassis = Nabtech.Entity.get( self.chassis )
+		self.entcontroller = Nabtech.Entity.get( self.podcontroller ).ent:getWirelink()
+		self.entdriverseat = Nabtech.Entity.get( self.driverseat )
+	end
+	
+	function c:toSaveTable()
+		local tab = {
+			chassis = self.chassis,
+			podcontroller = self.podcontroller,
+			driverseat = self.driverseat,
+			max = self.max,
+			mul = self.mul,
+			increment = self.increment,
+			axis = self.axis,
+			
+			offset = self.chassisOffset
+		}
+		
+		return tab
+	end
+	
+	function c:init( ent )
+		net.receive( "[nabtech.Provider.Steering] turn." .. ent:entIndex(), function( name, data, ply )
+			local driverseat = Nabtech.Entity.get( self.driverseat )
+			if driverseat and driverseat.ent:getDriver() == owner() then
+				self.turn = data.turn
+			end
+		end )
+		
+		c.super.init( self, ent )
+	end
+	
+	function c:deinit( ent )
+		net.remove( "[nabtech.Provider.Steering] turn." .. ent:entIndex() )
+		c.super.deinit( self )
+	end
+	
+	c.hook = {
+		[ "think" ] = function( self )
+			local ent = self.ent
+			local driverseat = self.entdriverseat.ent
+			local controller = self.entcontroller
+			local chassis = self.entchassis.ent
+			local turn = self.turn
+			
+			ent:setFrozen( true )
+			
+			if driverseat then
+				local driver = driverseat:getDriver()
+				if driver:isValid() then
+					if controller then
+						if controller.A == 1 and controller.D == 0 then
+							self.turn = -1
+						elseif controller.A == 0 and controller.D == 1 then
+							self.turn = 1
+						else
+							self.turn = 0
+						end
+					end
+				end
+			end
+		
+			if turn ~= 0 then
+				local increment = turn * self.increment
+				
+				self.percent = math.clamp( self.percent + increment, -100, 100 )
+				self.offset = math.lerp( math.abs( self.percent ) / 100, 0, self.max * self.mul * ( self.percent / math.abs( self.percent ~= 0 and self.percent or 1 ) ) )
+			elseif self.percent ~= 0 then
+				local increment = self.increment * ( self.percent / -math.abs( self.percent ) )
+				
+				self.percent = math.clamp( self.percent + increment, -100, 100 )
+				self.offset = math.lerp( math.abs( self.percent ) / 100, 0, self.max * self.mul * ( self.percent / math.abs( self.percent ~= 0 and self.percent or 1 ) ) )
+			else
+				self.offset = 0
+			end
+			
+			local offsetAng = Angle( 0, 0, 0 )
+			offsetAng[ self.axis ] = self.offset or 0
+			
+			self.targetAng = chassis:localToWorldAngles( self.chassisOffset + offsetAng )
+			
+			ent:setAngles( self.targetAng )
+		end
+	}
+end
+
+return c

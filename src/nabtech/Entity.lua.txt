@@ -1,0 +1,74 @@
+local c = Class:extend()
+
+c.entities = {}
+
+function c.get( entname )
+	return c.entities[ entname ]
+end
+
+function c:ctor( name, ent, parent )
+	self.name = name
+	self.ent = ent
+	
+	self.parent = parent
+	if self.parent then
+		self.longname = parent:__tostring() .. "." .. self.name
+		self.parent.children[ self.name ] = self
+	else
+		self.longname = self.name
+	end
+	
+	self.providers = {}
+	self.children = {}
+	
+	c.entities[ self:__tostring() ] = self
+end
+
+function c:toSaveTable()
+	local tab = {}
+	
+	if SERVER and self.parent then
+		tab.pos = self.parent.ent:worldToLocal( self.ent:getPos() )
+		tab.model = self.ent:getModel()
+		tab.class = self.ent:getClass()
+	end
+	
+	tab.providers = {}
+	for k, v in pairs( self.providers ) do
+		tab.providers[ v.name ] = {}
+		if CLIENT then
+			tab.providers[ v.name ].cl = v:toSaveTable()
+			tab.providers[ v.name ].cl.types = v.types
+		elseif SERVER then
+			tab.providers[ v.name ].sv = v:toSaveTable()
+			tab.providers[ v.name ].sv.types = v.types
+			tab.providers[ v.name ].type = v.type
+		end
+	end
+	
+	tab.children = {}
+	for k,v in pairs( self.children ) do
+		tab.children[ k ] = v:toSaveTable()
+	end
+	
+	return tab
+end
+
+function c:addProvider( provider )
+	self.providers[ provider.name ] = provider
+	self.providers[ provider.name ]:init( self.ent )
+end
+
+function c:removeProvider( name )
+	local provider = self.providers[ name ]
+	if provider then
+		provider:deinit()
+		self.providers[ name ] = nil
+	end
+end
+
+function c:__tostring()
+	return self.longname
+end
+
+return c

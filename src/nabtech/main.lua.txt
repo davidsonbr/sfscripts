@@ -1,0 +1,14 @@
+--@name Nabtech Elite V3
+--@author Wetnab
+--@model models/sprops/rectangles_thin/size_2/rect_12x12x1_5.mdl
+
+--@license LICENSE.txt
+--@readme README.txt
+
+--@shared
+--@include /nabfw.lua.txt
+
+require("/nabfw.lua.txt")
+if SERVER or player() == owner() then
+	main("nabtech.Nabtech")
+end

@@ -1,0 +1,74 @@
+local c = import( "nabtech.provider.Base" ):extend()
+
+c.type = "nabtech.provider.Engine"
+
+if SERVER then
+	function c:ctor( name, data )
+		self.name = name
+		
+		self.chassis = data.chassis or "chip.Chassis"
+		self.podcontroller = data.podcontroller or "chip.Control Panel.Pod Controller"
+		self.driverseat = data.driverseat or ( self.chassis .. ".Driver Seat" )
+		
+		self.idle = data.idle or 0
+		self.accel = false
+	end
+	
+	function c:toSaveTable()
+		return {
+			chassis = self.chassis,
+			podcontroller = self.podcontroller,
+			driverseat = self.driverseat,
+			idle = self.idle
+		}
+	end
+	
+	function c:init( ent )
+		net.receive( "[nabtech.Nabtech.Engine] accelerate." .. ent:entIndex(), function( name, data, ply )
+			local driverseat = Nabtech.Entity.get( self.driverseat )
+			if driverseat and driverseat.ent:getDriver() == owner() then
+				self.accel = data.accel
+			end
+		end )
+		
+		self.entcontroller = Nabtech.Entity.get( self.podcontroller ).ent:getWirelink()
+		self.entdriverseat = Nabtech.Entity.get( self.driverseat )
+		
+		c.super.init( self, ent )
+	end
+	
+	function c:deinit()
+		net.remove( "[nabtech.Nabtech.Engine] accelerate." .. self.ent:entIndex() )
+		
+		c.super.deinit( self )
+	end
+	
+	
+	c.timer = {
+		[ "think" ] = { 0.2, function( self )
+			local controller = self.entcontroller
+			local driverseat = self.entdriverseat
+			local engine = self.ent
+			
+			if not controller or not driverseat then return end
+			
+			local driver = self.entdriverseat.ent:getDriver()
+			if not driver:isValid() then
+				engine:acfSetActive( false )
+				return
+			end
+			engine:acfSetActive( true )
+			
+			local accel = false
+			if controller.W == 1 and controller.S == 0 then
+				accel = true
+			elseif controller.W == 0 and controller.S == 1 then
+				accel = true
+			end
+			
+			engine:acfSetThrottle( accel and 100 or self.idle )
+		end }
+	}
+end
+
+return c

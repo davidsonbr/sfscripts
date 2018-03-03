@@ -1,0 +1,194 @@
+{
+  "Control Panel": {
+    "pos": "[-14.3546 -0.0446 -2.9157]",
+    "children": {
+      "Rear Steering": {
+        "pos": "[6.0067 15.0489 -0.0198]",
+        "children": [],
+        "model": "models/sprops/mechanics/sgears/spur_30t_s.mdl",
+        "providers": {
+          "steering": {
+            "sv": {
+              "max": 15,
+              "chassis": "chip.Chassis",
+              "offset": "{0 0 0}",
+              "driverseat": "chip.Chassis.Driver Seat",
+              "axis": "y",
+              "increment": 5,
+              "mul": 1,
+              "podcontroller": "chip.Control Panel.Pod Controller"
+            },
+            "type": "nabtech.provider.Steering",
+            "cl": []
+          }
+        },
+        "class": "prop_physics"
+      },
+      "Back Right": {
+        "pos": "[-0.0158 2.9746 1.4951]",
+        "children": [],
+        "model": "models/sprops/cylinders/size_1/cylinder_1_5x3.mdl",
+        "providers": {
+          "suspension": {
+            "sv": {
+              "damping": 1000,
+              "constant": 20000
+            },
+            "type": "nabtech.provider.Suspension",
+            "cl": []
+          }
+        },
+        "class": "gmod_wire_hydraulic"
+      },
+      "Front Right": {
+        "pos": "[-0.0031 -2.9775 1.4951]",
+        "children": [],
+        "model": "models/sprops/cylinders/size_1/cylinder_1_5x3.mdl",
+        "providers": {
+          "suspension": {
+            "sv": {
+              "damping": 1000,
+              "constant": 20000
+            },
+            "type": "nabtech.provider.Suspension",
+            "cl": []
+          }
+        },
+        "class": "gmod_wire_hydraulic"
+      },
+      "Front Steering": {
+        "pos": "[5.9679 -14.997 -0.0307]",
+        "children": [],
+        "model": "models/sprops/mechanics/sgears/spur_30t_s.mdl",
+        "providers": {
+          "steering": {
+            "sv": {
+              "max": 30,
+              "chassis": "chip.Chassis",
+              "offset": "{0 0 0}",
+              "driverseat": "chip.Chassis.Driver Seat",
+              "axis": "y",
+              "increment": 5,
+              "mul": -1,
+              "podcontroller": "chip.Control Panel.Pod Controller"
+            },
+            "type": "nabtech.provider.Steering",
+            "cl": []
+          }
+        },
+        "class": "prop_physics"
+      },
+      "Pod Controller": {
+        "pos": "[3.0018 0 1.5003]",
+        "children": [],
+        "model": "models/sprops/rectangles_thin/size_1/rect_3x3x1_5.mdl",
+        "providers": [],
+        "class": "gmod_wire_pod"
+      },
+      "Front Left": {
+        "pos": "[5.9911 -3.0195 1.4869]",
+        "children": [],
+        "model": "models/sprops/cylinders/size_1/cylinder_1_5x3.mdl",
+        "providers": {
+          "suspension": {
+            "sv": {
+              "damping": 1000,
+              "constant": 20000
+            },
+            "type": "nabtech.provider.Suspension",
+            "cl": []
+          }
+        },
+        "class": "gmod_wire_hydraulic"
+      },
+      "Back Left": {
+        "pos": "[5.9803 3.0401 1.487]",
+        "children": [],
+        "model": "models/sprops/cylinders/size_1/cylinder_1_5x3.mdl",
+        "providers": {
+          "suspension": {
+            "sv": {
+              "damping": 1000,
+              "constant": 20000
+            },
+            "type": "nabtech.provider.Suspension",
+            "cl": []
+          }
+        },
+        "class": "gmod_wire_hydraulic"
+      }
+    },
+    "model": "models/sprops/rectangles/size_2/rect_12x18x3.mdl",
+    "providers": [],
+    "class": "prop_physics"
+  },
+  "Chassis": {
+    "pos": "[-69.8291 -0.4275 -16.1343]",
+    "children": {
+      "Engine": {
+        "pos": "[-40.1669 -0.0956 -2.9076]",
+        "children": [],
+        "model": "models/engines/inline4s.mdl",
+        "providers": {
+          "engine": {
+            "sv": {
+              "driverseat": "chip.Chassis.Driver Seat",
+              "chassis": "chip.Chassis",
+              "idle": 0,
+              "podcontroller": "chip.Control Panel.Pod Controller"
+            },
+            "type": "nabtech.provider.Engine",
+            "cl": []
+          }
+        },
+        "class": "acf_engine"
+      },
+      "Driver Seat": {
+        "pos": "[-0.399 -14.7577 3.7909]",
+        "children": [],
+        "model": "models/nova/airboat_seat.mdl",
+        "providers": [],
+        "class": "prop_vehicle_prisoner_pod"
+      },
+      "Transfer case": {
+        "pos": "[21.8925 -0.0278 -5.3133]",
+        "children": [],
+        "model": "models/engines/linear_s.mdl",
+        "providers": {
+          "transfercase": {
+            "sv": {
+              "chassis": "chip.Chassis",
+              "driverseat": "chip.Chassis.Driver Seat",
+              "podcontroller": "chip.Control Panel.Pod Controller"
+            },
+            "type": "nabtech.provider.Transfercase",
+            "cl": []
+          }
+        },
+        "class": "acf_gearbox"
+      },
+      "Gearbox": {
+        "pos": "[0.0422 0.0114 4.2168]",
+        "children": [],
+        "model": "models/engines/t5small.mdl",
+        "providers": {
+          "gearbox": {
+            "sv": {
+              "chassis": "chip.Chassis",
+              "engine": "chip.Chassis.Engine",
+              "automatic": true,
+              "driverseat": "chip.Chassis.Driver Seat",
+              "podcontroller": "chip.Control Panel.Pod Controller"
+            },
+            "type": "nabtech.provider.Gearbox",
+            "cl": []
+          }
+        },
+        "class": "acf_gearbox"
+      }
+    },
+    "model": "models/sprops/rectangles_thin/size_5/rect_48x120x1_5.mdl",
+    "providers": [],
+    "class": "prop_physics"
+  }
+}

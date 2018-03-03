@@ -1,0 +1,8 @@
+local Saucer = import( "saucer.Saucer" )
+local c = Class:extend()
+
+function c.main()
+	local saucer = Saucer:new()
+end
+
+return c

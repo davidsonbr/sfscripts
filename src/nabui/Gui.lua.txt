@@ -1,0 +1,20 @@
+local class = Class:extend()
+
+--- Create a gui renderer
+-- @param entity Entity to parent to
+-- @param pos Offset positon
+-- @param ang Offset angle
+function class:ctor( entity, pos, ang )
+	self.entity = entity
+	self.offset = { pos = pos, ang = ang }
+	
+	render.getTextureID( "file://gwenskin/GModDefault.png", function( tex ) print( tex ) end )
+	
+	hook.add( "postdrawopaquerenderables", "drawhud", function() self:render() end )
+end
+
+function class:render()
+
+end
+
+return class

@@ -1,0 +1,396 @@
+--@author wetnab
+--@name Nab Framework
+
+--[[BEGIN TYPE LIBRARY]]--
+function checkType( value, expected )
+	local t = type( value ):lower()
+	local expected = expected:lower()
+	if ( t ~= expected ) then
+		error( "Type mismatch (Expected " .. expected .. ", got " .. t .. ")", 1 )
+	end
+end
+--[[END TYPE LIBRARY]]--
+
+--[[BEGIN CLASS LIBRARY]]--
+Class = {}
+Class.__index = Class
+
+function Class:ctor()
+end
+
+function Class:extend()
+	local class = {}
+	for k, v in pairs( self ) do
+		if k:find( "__" ) == 1 then
+			class[ k ] = v
+		end
+	end
+	
+	class.__index = class
+	class.super = self
+	setmetatable( class, self )
+	return class
+end
+
+function Class:new( ... )
+	local object = {}
+	local id = tostring( object ):gsub( "table: 0x", "" ):upper()
+	object = setmetatable( object, self )
+	object.__id = id
+	object:ctor( ... )
+	return object
+end
+
+function Class:isInstanceOf( object )
+	local meta = getmetatable( self )
+	while meta do
+		if meta == object then
+			return true
+		end
+		meta = getmetatable( meta )
+	end
+	return false
+end
+
+function Class:__tostring()
+	if self.__id then
+		return "Object@" .. self.__id
+	else
+		return "Class"
+	end
+end
+--[[END CLASS LIBRARY]]--
+
+--[[BEGIN QUOTA LIBRARY]]--
+--- Get the percent of the CPU quota used
+function quotaPercent()
+	return 100 * ( quotaUsed() / quotaMax() )
+end
+
+--- Check that the quota is above a certain percent
+-- @param percent Check that more than ( 0 - 100 ) percent remains
+function quotaSafe( percent )
+	return 100 - quotaPercent() > percent
+end
+--[[END QUOTA LIBRARY]]--
+
+--[[BEGIN NET LIBRARY]]--
+local __net = net
+if ( not net.__net ) then
+	net = {
+		__net = __net
+	}
+end
+
+local __netQueue = {}
+local function __netProcess()
+	for k, v in pairs( __netQueue ) do
+		if quotaSafe( 10 ) and ( v.data and #v.data or 0 ) + 16 + 92 + #v.name < __net.getBytesLeft() then
+			__net.start( "nab" )
+			__net.writeUInt( #v.name, 32 ) --Length of name
+			__net.writeData( v.name, #v.name ) --Name
+			__net.writeBit( v.origin ) --Where the message was sent from
+			__net.writeInt( v.from, 32 ) --Sender ent
+			__net.writeInt( v.to, 32 ) --Target ent
+			if v.data then
+				__net.writeUInt( #v.data, 32 ) --Length of compressed data
+				__net.writeData( v.data, #v.data ) --Compressed data
+			else
+				__net.writeUInt( 0, 32 )
+			end
+			
+			if SERVER and v.to ~= -1 then
+				__net.send( entity( v.to ) )
+			else
+				__net.send()
+			end
+			__netQueue[ k ] = nil
+		else
+			return
+		end
+	end
+	
+	if #__netQueue == 0 then
+		hook.remove( "think", "__nabNet" )
+	end
+end
+
+local function __send( name, origin, from, to, data )
+	__netQueue[ #__netQueue + 1 ] = {
+		name = name,
+		origin = origin,
+		from = from,
+		to = to,
+		data = data
+	}
+	
+	hook.add( "think", "__nabNet", __netProcess )
+end
+
+--- Send a net message to ply, or server if ply is nil
+-- @param name Net message name
+-- @param data Table to send
+-- @param ply Player to send message to
+function net.send( name, data, ply )
+	__send( fastlz.compress( name ), SERVER, CLIENT and player():entIndex() or -1, isValid( ply ) and ply:entIndex() or -1, fastlz.compress( von.serialize( data or {} ) ) )
+end
+
+local __netCallbacks = {}
+--- Create a callback for net message
+-- @param name Net message name
+-- @param callback Callback function, args are ( name, data, ply )
+function net.receive( name, callback, self )
+	name = fastlz.compress( name )
+	if CLIENT and player() == owner() then
+		__netCallbacks[ name ] = callback
+	else
+		__netCallbacks[ name ] = function( name, data, ply )
+			coroutine.resume( coroutine.create( function() callback( name, data, ply ) end ) )
+		end
+	end
+end
+
+--- Remove a callback from the net message listeners
+-- @param name The name of the net message
+function net.remove( name )
+	__netCallbacks[ fastlz.compress( name ) ] = nil
+end
+
+hook.add( "net", "nabnet", function( name, len, ply )
+	if name == "nab" then
+		local namelen = __net.readUInt( 32 )
+		local name = __net.readData( namelen )
+		local origin = __net.readBit() == true
+		local from = __net.readInt( 32 )
+		local to = __net.readInt( 32 )
+		local datalen = __net.readUInt( 32 )
+		local data
+		if datalen > 0 then
+			data = __net.readData( datalen )
+		end
+		
+		if SERVER and to ~= -1 then
+			__send( name, origin, from, to, data )
+		else
+			if __netCallbacks[ name ] then
+				__netCallbacks[ name ]( fastlz.decompress( name ), data and von.deserialize( fastlz.decompress( data ) ) or {}, entity( from ) )
+			end
+		end
+	end
+end )
+--[[END NET LIBRARY]]--
+
+--[[BEGIN INCLUDE LIBRARY]]--
+local __includeData = {}
+if CLIENT and player() == owner() then
+	function include( filename )
+		if not __includeData[ filename ] then
+			if file.exists( filename ) then
+				local code = file.read( filename )
+				__includeData[ filename ] = { loadstring( code )() }
+			else
+				error( "Unable to include \"" .. filename .. "\"" )
+			end
+		end
+		
+		return unpack( __includeData[ filename ] )
+	end
+	
+	--Owner load file and send to player or server
+	local function __include( name, data, ply )
+		local filename = data.filename
+		local code
+		if filename and file.exists( filename ) then
+			code = file.read( filename )
+		else
+			code = "error( \"Unable to include \\\"" .. filename .. "\\\"\" )"
+		end
+		
+		local msg
+		local tab
+		if data.forward then
+			msg = "__include"
+			tab = { filename = filename, code = code }
+		else
+			msg = "__include." .. filename
+			tab = { code = code }
+		end
+		net.send( msg, tab, nil )
+	end
+	net.receive( "__include", __include )
+else
+	--Request file from server
+	function include( filename )
+		if not __includeData[ filename ] then
+			net.send( "__include", { filename = filename, forward = false }, SERVER and owner() or nil )
+			
+			local thread = coroutine.running()
+			local function __include( name, data, ply )
+				net.remove( "__include." .. filename )
+				coroutine.resume( thread, data.code )
+			end
+			net.receive( "__include." .. filename, __include )
+			
+			local code = coroutine.yield()
+			__includeData[ filename ] = { loadstring( code )() }
+		end
+		
+		return unpack( __includeData[ filename ] )
+	end
+	
+	if SERVER then
+		local __sourceCode = {}
+		--Return code to client or request code from owner
+		local function __include( name, data, ply )
+			if ply == owner() then
+				for _, v in pairs( __sourceCode[ data.filename ] ) do
+					net.send( "__include." .. data.filename, { code = data.code }, ply )
+				end
+				__sourceCode[ data.filename ] = data.code
+			else
+				if type( __sourceCode[ data.filename ] ) == "string" then
+					net.send( "__include." .. data.filename, { code = __sourceCode[ data.filename ] }, ply )
+				else
+					local tab = __sourceCode[ data.filename ] or {}
+					tab[ #tab + 1 ] = ply
+					if ( __sourceCode[ data.filename ] == nil ) then
+						net.send( "__include", { filename = data.filename, forward = true }, owner() )
+					end
+					__sourceCode[ data.filename ] = tab
+				end
+			end
+		end
+		net.receive( "__include", __include )
+	end
+end
+--[[END INCLUDE LIBRARY]]--
+
+function import( class )
+	checkType( class, "string" )
+	if _G[ class ] then
+		return _G[ class ]
+	end
+	
+	local __class = string.gsub( class, "%.", "/" )
+	_G[ class ] = include( __class .. ".lua.txt" )
+	return _G[ class ]
+end
+
+--[[BEGIN SYNC LIBRARY]]--
+function net.sync( name, callback, ply )
+	local loaded = false
+	net.receive( "sync_" .. name, function( _name, data, _ply )
+		if ( SERVER and _ply == ply ) or CLIENT then
+			net.remove( "sync_" .. name )
+		end
+		
+		net.send( "sync_" .. name, nil, ply )
+		
+		if callback and ( SERVER and not loaded or CLIENT ) then
+			loaded = true
+			callback()
+		end
+	end )
+	net.send( "sync_" .. name )
+end
+--[[END SYNC LIBRARY]]--
+
+function main( clientClass, serverClass )
+	serverClass = serverClass or clientClass
+	local __class = ( CLIENT and clientClass ) or ( SERVER and serverClass )
+	
+	net.sync( "__main", function()
+		local __main = coroutine.create( function()
+			local class = import( __class )
+			if ( class and class.main ) then
+				class.main()
+			else
+				error( "Function main not defined in " .. __class )
+			end
+			while true do
+				coroutine.yield()
+			end
+		end )
+		coroutine.resume( __main )
+	end )
+end
+
+--[[BEGIN FIND LIBRARY]]--
+--- Adds a search to the searches table
+-- @param relativePos The position of the query relative to the parent enty
+-- @param model The target model of the entity
+-- @param class The target class of the entity
+-- @param parent The entity that the search should be relative to
+function find.find ( relativePos, model, class, parent )
+	parent = parent or chip()
+	local result = find.inSphere( parent:localToWorld( relativePos ), 1 )
+	
+	for _, ent in pairs( result ) do
+		if ent:getClass() == class and ( ( model and ent:getModel() == model ) or ( model == nil ) ) then
+			return ent
+		end
+	end
+end
+--[[END FIND LIBRARY]]--
+
+if SERVER then
+--[[BEGIN SERVER LIBRARIES]]--
+
+--[[BEGIN HOLOGRAM LIBRARY]]--
+	local __holograms = holograms
+	if ( not holograms.__holograms ) then
+		holograms = {
+			__holograms = __holograms
+		}
+	end
+	
+	function holograms.create( data )
+		if not data then
+			return __holograms.create( chip():getPos(), Angle(), "models/editor/axis_helper.mdl", Vector( 0.5 ) )
+		end
+		
+		local function spawn( tab, parent )
+			checkType( tab, "table" )
+			local ret = {}
+			for k, v in pairs( tab ) do
+				local pos = v.pos or Vector()
+				local ang = v.ang or Angle()
+				local scale = v.scale or Vector( 1 )
+				local color = v.color or Color( 255, 255, 255, 255 )
+				local model = v.model or "models/editor/axis_helper.mdl"
+				local bodygroups = v.bodygroups or {}
+				local material = v.material
+				local clips = v.clips or {}
+				local children = v.children or {}
+				
+				
+				local holo = __holograms.create( parent:localToWorld( pos ), parent:localToWorldAngles( ang ), model, scale )
+				holo:setColor( color )
+				holo:setParent( parent or chip() )
+				
+				for k, v in pairs( bodygroups ) do
+					holo:setBodygroup( k, v )
+				end
+				
+				if material then
+					holo:setMaterial( material )
+				end
+				
+				for _k, _v in pairs( clips ) do
+					holo:setClip( _k, true, _v.origin, _v.normal, _v.islocal )
+				end
+				
+				ret[ k ] = { ent = holo, children = spawn( children, holo ) }
+			end
+			return ret
+		end
+		return spawn( data, chip(), ret )
+	end
+--[[END HOLOGRAM LIBRARY]]--
+
+--[[END SERVER LIBRARIES]]--
+else
+--[[BEGIN CLIENT LIBRARIES]]--
+
+--[[END CLIENT LIBRARIES]]--
+end

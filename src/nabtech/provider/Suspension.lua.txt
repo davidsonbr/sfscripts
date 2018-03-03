@@ -1,0 +1,32 @@
+local c = import( "nabtech.provider.Base" ):extend()
+
+c.type = "nabtech.provider.Suspension"
+
+if SERVER then
+	function c:ctor( name, data )
+		self.name = name
+		
+		self.constant = data.constant or 1
+		self.damping = data.damping or 1
+	end
+	
+	function c:toSaveTable()
+		return {
+			constant = self.constant,
+			damping = self.damping
+		}
+	end
+	
+	c.timer = {
+		[ "think" ] = { 0.2, function( self )
+			if not self.wl then
+				self.wl = self.ent:getWirelink()
+			end
+			
+			self.wl.Constant = self.constant
+			self.wl.Damping = self.damping
+		end }
+	}
+end
+
+return c

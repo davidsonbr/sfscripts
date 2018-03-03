@@ -1,0 +1,45 @@
+local c = import( "nabtech.provider.Base" ):extend()
+
+c.type = "nabtech.provider.Transfercase"
+
+if SERVER then
+	function c:ctor( name, data )
+		self.name = name
+		
+		self.chassis = data.chassis or "chip.Chassis"
+		self.podcontroller = data.podcontroller or "chip.Control Panel.Pod Controller"
+		self.driverseat = data.driverseat or ( self.chassis .. ".Driver Seat" )
+		
+		self.accel = false
+		
+		self.entcontroller = Nabtech.Entity.get( self.podcontroller ).ent:getWirelink()
+		self.entdriverseat = Nabtech.Entity.get( self.driverseat ).ent
+	end
+	
+	function c:toSaveTable()
+		local tab = {
+			chassis = self.chassis,
+			podcontroller = self.podcontroller,
+			driverseat = self.driverseat
+		}
+		
+		return tab
+	end
+	
+	c.timer = {
+		[ "think" ] = { 0.2, function( self )
+			if not self.entcontroller and not self.entdriverseat then return end
+			
+			local driver = self.entdriverseat:getDriver()
+			if not driver:isValid() then return end
+			
+			if self.entcontroller.W == 1 and self.entcontroller.S == 0 then
+				self.ent:acfShift( 1 )
+			elseif self.entcontroller.W == 0 and self.entcontroller.S == 1 then
+				self.ent:acfShift( 2 )
+			end
+		end }
+	}
+end
+
+return c

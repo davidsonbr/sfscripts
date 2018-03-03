@@ -1,0 +1,99 @@
+local c = Class:extend()
+
+c.providers = {}
+
+c.type = "nabtech.provider.Base"
+
+c.hook = {}
+c.timer = {}
+if CLIENT then
+	c.input = {	pressed = {}, released = {} }
+end
+
+function c:__tostring()
+	return self.type
+end
+
+function c:ctor( name, data )
+	self.name = name
+end
+
+function c:toSaveTable()
+	return {}
+end
+
+function c:init( ent )
+	self.ent = ent
+
+	for k, v in pairs( self.hook or {} ) do
+		hook.add( k, "[nabtech.Provider]" .. self.type .. self.name .. self.ent:entIndex(), function( ... )
+			if #{ ... } == 0 then
+				v( self )
+				return
+			end
+			v( self, unpack( { ... } ) )
+		end )
+	end
+	
+	for k, v in pairs( self.timer or {} ) do
+		local time = v[ 1 ]
+		local func = v[ 2 ]
+		timer.create( "[nabtech.Provider]" .. k .. self.type .. self.name .. self.ent:entIndex(), time, 0, function()
+			func( self )
+		end )
+	end
+	
+	if CLIENT then
+		self.input = self.input or { pressed = {}, released = {} }
+		
+		local _countPressed = 0
+		local _countReleased = 0
+		
+		for k, v in pairs( self.input.pressed ) do
+			_countPressed = _countPressed + 1
+		end
+		for k, v in pairs( self.input.released ) do
+			_countReleased = _countReleased + 1
+		end
+		
+		if _countPressed > 0 then
+			hook.add( "inputPressed", "[nabtech.Provider]" .. self.type .. self.name .. self.ent:entIndex(), function( id )
+				local key = input.getKeyName( id )
+				local func = self.input.pressed[ key ]
+				if func then
+					func( self )
+				end
+			end )
+		end
+		if _countReleased > 0 then
+			hook.add( "inputReleased", "[nabtech.Provider]" .. self.type .. self.name .. self.ent:entIndex(), function( id )
+				local key = input.getKeyName( id )
+				local func = self.input.released[ key ]
+				if func then
+					func( self )
+				end
+			end )
+		end
+	end
+end
+
+function c:deinit()
+	local id = self.ent:entIndex()
+	local hookid = self.type .. self.name .. id
+	for k, v in pairs( self.hook ) do
+		hook.remove( k, "[nabtech.Provider]" .. hookid )
+	end
+	
+	for k, v in pairs( self.timer ) do
+		timer.remove( "[nabtech.Provider]" .. k .. self.type .. self.name .. self.ent:entIndex() )
+	end
+	
+	if CLIENT then
+		hook.remove( "inputPressed", "[nabtech.Provider]" .. hookid )
+		hook.remove( "inputReleased", "[nabtech.Provider]" .. hookid )
+	end
+	
+	self.ent = nil
+end
+
+return c

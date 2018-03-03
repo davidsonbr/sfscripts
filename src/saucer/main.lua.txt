@@ -1,0 +1,7 @@
+--@name Saucer
+--@author Wetnab
+--@shared
+--@include /nabfw.lua.txt
+
+require( "/nabfw.lua.txt" )
+main( "saucer.Client", "saucer.Server" )

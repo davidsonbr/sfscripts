@@ -1,0 +1,508 @@
+local c = Class:extend()
+
+function c:new()
+	self:init()
+	self.holos = holograms.create( self.holodata or {} )
+end
+
+function c:init()
+	self.holodata = {
+		body = {
+			pos = Vector( -70, 0, -10 ),
+			ang = Angle( 0, 0, 0 ),
+			model = "models/sprops/geometry/sphere_144.mdl",
+			scale = Vector( 180, 180, 1 ) / Vector( 144 ),
+			clips = {
+				{
+					origin = Vector(),
+					normal = Vector( 0, 0, -1 ),
+					islocal = true
+				}
+			},
+			children = {
+				hoodF = {
+					pos = Vector( 53.8, 0, 21 ),
+					ang = Angle( 0, 90, 0 ),
+					model = "models/sprops/rectangles_thin/size_0/rect_1_5x6x1_5.mdl",
+					scale = Vector( 1 ),
+					children = {
+						hood = {
+							pos = Vector( 0, 53.8, -35 ),
+							ang = Angle( 0, 90, 0 ),
+							model = "models/sprops/geometry/sphere_144.mdl",
+							scale = Vector( 190, 190, 90 ) / Vector( 144 ),
+							clips = {
+								{
+									origin = Vector( 0, 23.9, 0 ),
+									normal = Vector( 0, -1, 0 ),
+									islocal = true
+								},
+								{
+									origin = Vector( 0, -23.9, 0 ),
+									normal = Vector( 0, 1, 0 ),
+									islocal = true
+								},
+								{
+									origin = Vector( 35 ),
+									normal = Vector( 0, 0, -1 ),
+									islocal = true
+								},
+								{
+									origin = Vector( 14 ),
+									normal = Vector( 0, 0, 1 ),
+									islocal = true
+								},
+								{
+									origin = Vector( 0 ),
+									normal = Vector( -1, 0, 0 ),
+									islocal = true
+								},
+							}
+						}
+					}
+				},
+				hoodR = {
+					pos = Vector( -53.8, 0, 21 ),
+					ang = Angle( 0, -90, 0 ),
+					model = "models/sprops/rectangles_thin/size_0/rect_1_5x6x1_5.mdl",
+					scale = Vector( 1 ),
+					children = {
+						hood = {
+							pos = Vector( 0, 53.8, -35 ),
+							ang = Angle( 0, 90, 0 ),
+							model = "models/sprops/geometry/sphere_144.mdl",
+							scale = Vector( 190, 190, 90 ) / Vector( 144 ),
+							clips = {
+								{
+									origin = Vector( 0, 23.9, 0 ),
+									normal = Vector( 0, -1, 0 ),
+									islocal = true
+								},
+								{
+									origin = Vector( 0, -23.9, 0 ),
+									normal = Vector( 0, 1, 0 ),
+									islocal = true
+								},
+								{
+									origin = Vector( 35 ),
+									normal = Vector( 0, 0, -1 ),
+									islocal = true
+								},
+								{
+									origin = Vector( 14 ),
+									normal = Vector( 0, 0, 1 ),
+									islocal = true
+								},
+								{
+									origin = Vector( 0 ),
+									normal = Vector( -1, 0, 0 ),
+									islocal = true
+								},
+							}
+						}
+					}
+				},
+				wall = {
+					pos = Vector( 0, 0, 13 ),
+					ang = Angle( 0, 0, 90 ),
+					model = "models/sprops/geometry/fring_108.mdl",
+					scale = Vector( 102, 108 * 13 / 1.5, 102 ) / Vector( 108 )
+				},
+				brace = {
+					pos = Vector( 0, 0, 49 ),
+					ang = Angle( 0, 90, 0 ),
+					model = "models/sprops/geometry/hring_108.mdl",
+					scale = Vector( 102, 102, 104 ) / Vector( 108 )
+				},
+				dome = {
+					pos = Vector( 0, 0, 24 ),
+					ang = Angle( 0, 0, 0 ),
+					model = "models/props_phx/construct/glass/glass_dome360.mdl",
+					scale = Vector( 51.5 ) / Vector( 48 ),
+					color = Color( 0, 0, 0, 255 ),
+					clips = {
+						{
+							origin = Vector( 0, 0, 1 ),
+							normal = Vector( 0, 0, 1 ),
+							islocal = true
+						}
+					}
+				},
+				belly = {
+					pos = Vector( 0, 0, 0 ),
+					ang = Angle( 0, 0, 180 ),
+					model = "models/sprops/misc/domes/size_4/dome_48x24.mdl",
+					scale = Vector( 102, 102, 36 ) / Vector( 48 )
+				},
+				hullL = {
+					pos = Vector( 0, 0, -14 ),
+					ang = Angle( 0, 0, 0 ),
+					model = "models/sprops/geometry/sphere_144.mdl",
+					scale = Vector( 190, 190, 90 ) / Vector( 144 ),
+					clips = {
+						{
+							origin = Vector( 14 ),
+							normal = Vector( 0, 0, 1 ),
+							islocal = true
+						},
+						{
+							origin = Vector( 0, 0, 38 ),
+							normal = Vector( 0, 0, -1 ),
+							islocal = true
+						},
+						{
+							origin = Vector( 0, 23.9, 0 ),
+							normal = Vector( 0, 1, 0 ),
+							islocal = true
+						}
+					}
+				},
+				hullR = {
+					pos = Vector( 0, 0, -14 ),
+					ang = Angle( 0, 0, 0 ),
+					model = "models/sprops/geometry/sphere_144.mdl",
+					scale = Vector( 190, 190, 90 ) / Vector( 144 ),
+					clips = {
+						{
+							origin = Vector( 14 ),
+							normal = Vector( 0, 0, 1 ),
+							islocal = true
+						},
+						{
+							origin = Vector( 0, 0, 38 ),
+							normal = Vector( 0, 0, -1 ),
+							islocal = true
+						},
+						{
+							origin = Vector( 0, -23.9, 0 ),
+							normal = Vector( 0, -1, 0 ),
+							islocal = true
+						}
+					}
+				},
+				hullT = {
+					pos = Vector( 0, 0, -14 ),
+					ang = Angle( 0, 0, 0 ),
+					model = "models/sprops/geometry/sphere_144.mdl",
+					scale = Vector( 190, 190, 90 ) / Vector( 144 ),
+					clips = {
+						{
+							origin = Vector( 35 ),
+							normal = Vector( 0, 0, 1 ),
+							islocal = true
+						},
+						{
+							origin = Vector( 0, 0, 38 ),
+							normal = Vector( 0, 0, -1 ),
+							islocal = true
+						},
+					}
+				},
+				hullB = {
+					pos = Vector( 0, 0, -14 ),
+					ang = Angle( 0, 0, 0 ),
+					model = "models/sprops/geometry/sphere_144.mdl",
+					scale = Vector( 190, 190, 90 ) / Vector( 144 ),
+					clips = {
+						{
+							origin = Vector( 14 ),
+							normal = Vector( 0, 0, 1 ),
+							islocal = true
+						},
+						{
+							origin = Vector( 0, 0, 20 ),
+							normal = Vector( 0, 0, -1 ),
+							islocal = true
+						},
+					}
+				},
+				--Light Driver
+				lightL = {
+					pos = Vector( 69.504, 34.444, 17.051 ),
+					ang = Angle( 0, 0, 0 ),
+					model = "models/lamps/torch.mdl",
+					scale = Vector( 1 )
+				},
+				lensL = {
+					pos = Vector( 73.098, 34.521, 17.176 ),
+					ang = Angle( 0, 90, 0 ),
+					model = "models/sprops/geometry/t_fdisc_12.mdl",
+					scale = Vector( 0.9, 0.1, 0.9 )
+				},
+				--Light Passenger
+				lightR = {
+					pos = Vector( 69.504, -34.444, 17.051 ),
+					ang = Angle( 0, 0, 0 ),
+					model = "models/lamps/torch.mdl",
+					scale = Vector( 1 )
+				},
+				lensR = {
+					pos = Vector( 73.098, -34.521, 17.176 ),
+					ang = Angle( 0, 90, 0 ),
+					model = "models/sprops/geometry/t_fdisc_12.mdl",
+					scale = Vector( 0.9, 0.1, 0.9 )
+				},
+				--Thruster Driver
+				CanL = {
+					pos = Vector( -36, 76, 29 ),
+					ang = Angle( -90, 0, 0 ),
+					model = "models/props_trainstation/trashcan_indoor001b.mdl",
+					scale = Vector( 1 )
+				},
+				ThrustL = {
+					pos = Vector( -58, 76, 29 ),
+					ang = Angle( -90, 0, 0 ),
+					model = "models/xqm/afterburner1.mdl",
+					scale = Vector( 1 )
+				},
+				StrutL = {
+					pos = Vector( -35.577, -64.778, 17.694 ),
+					ang = Angle( 45, 90, 0 ),
+					model = "models/sprops/rectangles_thin/size_2/rect_12x18x1_5.mdl",
+					scale = Vector( 12, 12, 12 ) / Vector( 12 )
+				},
+				--Thruster Passenger
+				CanR = {
+					pos = Vector( -36, -76, 29 ),
+					ang = Angle( -90, 0, 0 ),
+					model = "models/props_trainstation/trashcan_indoor001b.mdl",
+					scale = Vector( 1 )
+				},
+				ThrustR = {
+					pos = Vector( -58, -76, 29 ),
+					ang = Angle( -90, 0, 0 ),
+					model = "models/xqm/afterburner1.mdl",
+					scale = Vector( 1 )
+				},
+				StrutR = {
+					pos = Vector( -35.577, 64.778, 17.694 ),
+					ang = Angle( -45, 90, 0 ),
+					model = "models/sprops/rectangles_thin/size_2/rect_12x18x1_5.mdl",
+					scale = Vector( 12, 12, 12 ) / Vector( 12 )
+				},
+			}
+		},
+		frontTrunk = {
+			pos = Vector( 1.018, 0.025, -8.5 ),
+			ang = Angle( 0, 90, 0 ),
+			model = "models/sprops/rectangles_thin/size_4/rect_36x48x1_5.mdl",
+			clips = {
+				{
+					origin = Vector( -20.597, -15.041, 0.260 ),
+					normal = Vector( 0.245, 0.797, -0.552 ),
+					islocal = true
+				},
+				{
+					origin = Vector( -7.242, -17.035, 0.260 ),
+					normal = Vector( 0.081, 0.846, -0.526 ),
+					islocal = true
+				},
+				{
+					origin = Vector( 7.7739, -16.979, 0.260 ),
+					normal = Vector( -0.083, 0.849, -0.522 ),
+					islocal = true
+				},
+				{
+					origin = Vector( 21.206, -14.860, 0.260 ),
+					normal = Vector( -0.244, 0.808, -0.537 ),
+					islocal = true
+				}
+			},
+			children = {
+				wallL = {
+					pos = Vector( 24.687, 0, 12.766 ),
+					ang = Angle( 0, -90, 0 ),
+					model = "models/sprops/triangles_thin/right/size_2/t_rtri_24x36.mdl",
+					clips = {
+						{
+							origin = Vector( 6.803, -0.235, -5.894 ),
+							normal = Vector( -0.644, -0.161, -0.748 ),
+							islocal = true
+						},
+						{
+							origin = Vector( -3.301, -0.235, 0.641 ),
+							normal = Vector( -0.482, -0.124, -0.867 ),
+							islocal = true
+						},
+						{
+							origin = Vector( -14.165, -0.235, 5.528 ),
+							normal = Vector( -0.332, -0.119, -0.936 ),
+							islocal = true
+						},
+						{
+							origin = Vector( 0.024, 18.732, 12.750 ),
+							normal = Vector( -0.817, -0.230, -0.529 ),
+							islocal = true
+						},
+					}
+				},
+				wallR = {
+					pos = Vector( -24.687, 0, 12.766 ),
+					ang = Angle( 0, -90, 0 ),
+					model = "models/sprops/triangles_thin/right/size_2/t_rtri_24x36.mdl",
+					clips = {
+						{
+							origin = Vector( 13.188, 0.285, -11.592 ),
+							normal = Vector( -0.823, 0.203, -0.531 ),
+							islocal = true
+						},
+						{
+							origin = Vector( 7.578, 0.285, -6.546 ),
+							normal = Vector( -0.639, 0.153, -0.754 ),
+							islocal = true
+						},
+						{
+							origin = Vector( -1.552, 0.286, -0.305 ),
+							normal = Vector( -0.482, 0.146, -0.864 ),
+							islocal = true
+						},
+						{
+							origin = Vector( -15.740, 0.285, 6.117 ),
+							normal = Vector( -0.320, 0.137, -0.937 ),
+							islocal = true
+						},
+					}
+				},
+				wallB = {
+					pos = Vector( 0, 18.732, 12.75 ),
+					ang = Angle( 0, 0, 90 ),
+					model = "models/sprops/rectangles_thin/size_3/rect_24x48x1_5.mdl",
+					clips = {
+						{
+							origin = Vector( -17.128, 8.131, 0.270 ),
+							normal = Vector( 0.106, -0.929, -0.355 ),
+							islocal = true
+						},
+						{
+							origin = Vector( -7.344, 8.938, 0.278 ),
+							normal = Vector( 0.050, -0.931, -0.362 ),
+							islocal = true
+						},
+						{
+							origin = Vector( 6.559, 9.014, 0.278 ),
+							normal = Vector( -0.034, -0.949, -0.314 ),
+							islocal = true
+						},
+						{
+							origin = Vector( 18.310, 7.990, 0.278 ),
+							normal = Vector( -0.111, -0.929, -0.352 ),
+							islocal = true
+						},
+					}
+				}
+			}
+		},
+		rearTrunk = {
+			pos = Vector( -141.018, 0.025, -8.5 ),
+			ang = Angle( 0, -90, 0 ),
+			model = "models/sprops/rectangles_thin/size_4/rect_36x48x1_5.mdl",
+			clips = {
+				{
+					origin = Vector( -20.597, -15.041, 0.260 ),
+					normal = Vector( 0.245, 0.797, -0.552 ),
+					islocal = true
+				},
+				{
+					origin = Vector( -7.242, -17.035, 0.260 ),
+					normal = Vector( 0.081, 0.846, -0.526 ),
+					islocal = true
+				},
+				{
+					origin = Vector( 7.7739, -16.979, 0.260 ),
+					normal = Vector( -0.083, 0.849, -0.522 ),
+					islocal = true
+				},
+				{
+					origin = Vector( 21.206, -14.860, 0.260 ),
+					normal = Vector( -0.244, 0.808, -0.537 ),
+					islocal = true
+				}
+			},
+			children = {
+				wallL = {
+					pos = Vector( 24.687, 0, 12.766 ),
+					ang = Angle( 0, -90, 0 ),
+					model = "models/sprops/triangles_thin/right/size_2/t_rtri_24x36.mdl",
+					clips = {
+						{
+							origin = Vector( 6.803, -0.235, -5.894 ),
+							normal = Vector( -0.644, -0.161, -0.748 ),
+							islocal = true
+						},
+						{
+							origin = Vector( -3.301, -0.235, 0.641 ),
+							normal = Vector( -0.482, -0.124, -0.867 ),
+							islocal = true
+						},
+						{
+							origin = Vector( -14.165, -0.235, 5.528 ),
+							normal = Vector( -0.332, -0.119, -0.936 ),
+							islocal = true
+						},
+						{
+							origin = Vector( 0.024, 18.732, 12.750 ),
+							normal = Vector( -0.817, -0.230, -0.529 ),
+							islocal = true
+						},
+					}
+				},
+				wallR = {
+					pos = Vector( -24.687, 0, 12.766 ),
+					ang = Angle( 0, -90, 0 ),
+					model = "models/sprops/triangles_thin/right/size_2/t_rtri_24x36.mdl",
+					clips = {
+						{
+							origin = Vector( 13.188, 0.285, -11.592 ),
+							normal = Vector( -0.823, 0.203, -0.531 ),
+							islocal = true
+						},
+						{
+							origin = Vector( 7.578, 0.285, -6.546 ),
+							normal = Vector( -0.639, 0.153, -0.754 ),
+							islocal = true
+						},
+						{
+							origin = Vector( -1.552, 0.286, -0.305 ),
+							normal = Vector( -0.482, 0.146, -0.864 ),
+							islocal = true
+						},
+						{
+							origin = Vector( -15.740, 0.285, 6.117 ),
+							normal = Vector( -0.320, 0.137, -0.937 ),
+							islocal = true
+						},
+					}
+				},
+				wallB = {
+					pos = Vector( 0, 18.732, 12.75 ),
+					ang = Angle( 0, 0, 90 ),
+					model = "models/sprops/rectangles_thin/size_3/rect_24x48x1_5.mdl",
+					clips = {
+						{
+							origin = Vector( -17.128, 8.131, 0.270 ),
+							normal = Vector( 0.106, -0.929, -0.355 ),
+							islocal = true
+						},
+						{
+							origin = Vector( -7.344, 8.938, 0.278 ),
+							normal = Vector( 0.050, -0.931, -0.362 ),
+							islocal = true
+						},
+						{
+							origin = Vector( 6.559, 9.014, 0.278 ),
+							normal = Vector( -0.034, -0.949, -0.314 ),
+							islocal = true
+						},
+						{
+							origin = Vector( 18.310, 7.990, 0.278 ),
+							normal = Vector( -0.111, -0.929, -0.352 ),
+							islocal = true
+						},
+					}
+				}
+			}
+		}
+	}
+end
+
+return c

@@ -1,0 +1,148 @@
+Nabtech = Class:extend()
+local c = Nabtech
+
+Nabtech.Entity = import( "nabtech.Entity" )
+Nabtech.Provider = import( "nabtech.provider.Base" )
+
+net.sync( "main", function()
+if SERVER then
+	net.receive( "[nabtech.Nabtech] providers", function( _, data, _)
+		for _, v in pairs( data ) do
+			if v ~= "Base.lua.txt" then
+				local str = v:gsub( ".lua.txt", "" )
+				import( "nabtech.provider." .. str )
+			end
+		end
+		
+	end )
+elseif CLIENT then
+	local files = file.find( "nabtech/provider/*" )
+	net.send( "[nabtech.Nabtech] providers", files )
+	
+	for k, v in pairs( files ) do
+		if v ~= "Base.lua.txt" then
+			local str = v:gsub( ".lua.txt", "" )
+			import( "nabtech.provider." .. str )
+		end
+	end
+end
+end )
+
+c.root = "nabtech/"
+c.cfg = c.root .. "cfg/"
+c.data = c.root .. "data/"
+
+function c.main()
+	c.instance = c:new()
+end
+
+function c:ctor( UID )
+	if UID then
+		self:setUID( UID )
+	else
+		if CLIENT and player() == owner() then
+			net.receive( "[nabtech.Nabtech] uid", function( _, data ) self:setUID( data.UID ) end )
+		else
+			local ent = find.find( Vector( -20.626, 0.031, -2.703 ), "models/cheeze/wires/mini_cpu.mdl", "gmod_wire_value" )
+			if ent and ent:getWirelink() then
+				self.UID = ent:getWirelink()[ "1" ]
+				print( "Found UID chip: " .. self.UID )
+				net.send( "[nabtech.Nabtech] uid", { UID = self.UID }, owner() )
+			else
+				error( "Failed to find UID chip" )
+			end
+		end
+	end
+	net.sync( "[nabtech.Nabtech] init", function() self:init() end )
+end
+
+function c:setUID( UID )
+	self.UID = UID
+end
+
+function c:init()
+	Nabtech.Entity:new( "chip", chip(), nil )
+	
+	if CLIENT then
+		local filename = self.data .. "vehicles/" .. self.UID .. ".json.txt"
+		if file.exists( filename ) then
+			self.vehicle = json.decode( file.read( filename ) )
+			
+			net.send( "[nabtech.Nabtech] config", { data = self.vehicle } )
+		end
+		net.receive( "[nabtech.Nabtech] entity", function( _, data )
+			self:addEntity( data.name, data.ent, Nabtech.Entity.get( data.parent ) )
+			net.send( "[nabtech.Nabtech] entityAdded." .. data.ent:entIndex() )
+		end )
+		net.receive( "[nabtech.Nabtech] provider", function( _, data ) self:addProvider( data.name, data.ent, data.data ) end )
+	else
+		net.receive( "[nabtech.Nabtech] config", function( _, data ) self:loadVehicle( data ) end )
+	end
+end
+
+function c:addEntity( name, ent, parent )
+	local ent = Nabtech.Entity:new( name, ent, parent )
+	return ent
+end
+
+function c:addProvider( name, entName, data )
+	local ent = Nabtech.Entity.get( entName )
+	local provider = import( data.type ):new( name, data.cl or {} )
+	
+	ent:addProvider( provider )
+end
+
+local __providerQueue = {}
+local function __loadProviders()
+	for k, v in pairs( __providerQueue ) do
+		local ent = v.ent
+		local name = v.name
+		local data = v.data
+		
+		local _c = _G[ data.type ]
+		if _c ~= nil then
+			local provider = _c:new( name, data.sv )
+			ent:addProvider( provider )
+			__providerQueue[ k ] = nil
+		end
+	end
+	
+	if #__providerQueue == 0 then
+		hook.remove( "think", "[nabtech.Nabtech] processProviders" )
+	end
+end
+
+function c:loadVehicle( data )
+	self.vehicle = data
+	
+	local i = 0
+	local function __load( _data, parent )
+		for k, v in pairs( _data ) do
+			i = i + 1
+			local ent = find.find( Vector( unpack( v.pos ) ), v.model, v.class, parent.ent )
+			
+			local nabEnt = Nabtech.Entity:new( k, ent, parent )
+			net.send( "[nabtech.Nabtech] entity", { id = i, name = k, ent = ent, parent = parent:__tostring() }, owner() )
+			
+			net.receive( "[nabtech.Nabtech] entityAdded." .. ent:entIndex(), function()
+				net.remove( "[nabtech.Nabtech] entityAdded." .. ent:entIndex() )
+				print( "Created " .. nabEnt:__tostring() )
+				
+				for _k, _v in pairs( v.providers or {} ) do
+					__providerQueue[ #__providerQueue + 1 ] = { ent = nabEnt, name = _k, data = _v }
+					hook.add( "think", "[nabtech.Nabtech] processProviders", __loadProviders )
+				end
+			end )
+			
+			__load( v.children, nabEnt )
+		end
+	end
+	
+	__load( data.data, Nabtech.Entity.get( "chip" ) )
+end
+
+function c:__tostring()
+	return "nabtech.Nabtech"
+end
+
+return c
