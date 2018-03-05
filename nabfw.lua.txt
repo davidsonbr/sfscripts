@@ -18,7 +18,10 @@ Class.__index = Class
 function Class:ctor()
 end
 
-function Class:extend()
+function Class:dtor()
+end
+
+function Class:extend( name )
 	local class = {}
 	for k, v in pairs( self ) do
 		if k:find( "__" ) == 1 then
@@ -27,7 +30,8 @@ function Class:extend()
 	end
 	
 	class.__index = class
-	class.super = self
+    class.__name = name or "Class"
+	class.base = self
 	setmetatable( class, self )
 	return class
 end
@@ -54,10 +58,19 @@ end
 
 function Class:__tostring()
 	if self.__id then
-		return "Object@" .. self.__id
+		return self:toString()
 	else
-		return "Class"
+		return self.__name
 	end
+end
+
+---Does not work
+function Class:__gc()
+    self:dtor()
+end
+
+function Class:toString()
+    return "Object@" .. self.__id
 end
 --[[END CLASS LIBRARY]]--
 
@@ -267,12 +280,13 @@ end
 
 function import( class )
 	checkType( class, "string" )
+
 	if _G[ class ] then
 		return _G[ class ]
 	end
-	
+
 	local __class = string.gsub( class, "%.", "/" )
-	_G[ class ] = include( __class .. ".lua.txt" )
+	_G[ class ] = include( "src/" .. __class .. ".lua.txt" )
 	return _G[ class ]
 end
 
@@ -295,17 +309,21 @@ function net.sync( name, callback, ply )
 end
 --[[END SYNC LIBRARY]]--
 
-function main( clientClass, serverClass )
-	serverClass = serverClass or clientClass
-	local __class = ( CLIENT and clientClass ) or ( SERVER and serverClass )
-	
+function main( className, ... )
+    local args = {...}
 	net.sync( "__main", function()
 		local __main = coroutine.create( function()
-			local class = import( __class )
+            local class
+            if type( className ) == "string" then
+                class = import(className)
+            else
+                class = className
+            end
+
 			if ( class and class.main ) then
-				class.main()
-			else
-				error( "Function main not defined in " .. __class )
+				class.main( unpack( args ) )
+			elseif ( class and not class.main ) then
+				error( "Function main not defined in " .. className)
 			end
 			while true do
 				coroutine.yield()
@@ -319,7 +337,7 @@ end
 --- Adds a search to the searches table
 -- @param relativePos The position of the query relative to the parent enty
 -- @param model The target model of the entity
--- @param class The target class of the entity
+-- @param __class The target class of the entity
 -- @param parent The entity that the search should be relative to
 function find.find ( relativePos, model, class, parent )
 	parent = parent or chip()

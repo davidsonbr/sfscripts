@@ -1,0 +1,23 @@
+if SERVER then return end -- Client side only
+
+local class = import( "nabui.Panel" ):extend( "nabui.Frame" )
+
+function class:ctor( parent )
+    self.base.ctor( self, parent )
+    self.size = Vector( 10, 10 )
+end
+
+function class:draw()
+    local pos = self:getPos()
+    render.drawRect( pos.x, pos.y, self.size.x, self.size.y )
+end
+
+function class:getSize()
+    return self.size
+end
+
+function class:setSize( size )
+    self.size = size
+end
+
+return class

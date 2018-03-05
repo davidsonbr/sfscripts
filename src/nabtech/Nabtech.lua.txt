@@ -16,7 +16,7 @@ if SERVER then
 		
 	end )
 elseif CLIENT then
-	local files = file.find( "nabtech/provider/*" )
+	local files = file.find( c.root .. "provider/*" )
 	net.send( "[nabtech.Nabtech] providers", files )
 	
 	for k, v in pairs( files ) do
@@ -28,7 +28,7 @@ elseif CLIENT then
 end
 end )
 
-c.root = "nabtech/"
+c.root = "src/nabtech/"
 c.cfg = c.root .. "cfg/"
 c.data = c.root .. "data/"
 

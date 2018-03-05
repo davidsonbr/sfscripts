@@ -1,0 +1,60 @@
+if SERVER then return end -- Client side only
+
+local class = import( "nabui.Panel" ):extend( "nabui.Button" )
+
+function class:ctor()
+    self.base.ctor( self )
+
+    self.size = Vector( 50, 20 )
+end
+
+function class:isDown()
+
+end
+
+function class:doClick()
+
+end
+
+function class:setEnabled()
+
+end
+
+function class:setDisabled()
+
+end
+
+function class:draw()
+    local pos = self:getPos()
+    render.drawRect( pos.x, pos.y, self.size.x, self.size.y )
+end
+
+local function checkClick( panel, x, y )
+    if panel:isInstanceOf( class ) then
+        if x >= panel.pos.x and x <= panel.pos.x + panel.size.x then
+            if y >= panel.pos.y and y <= panel.pos.y + panel.size.y then
+                return panel
+            end
+        end
+    end
+
+    for k, v in pairs( panel.children ) do
+        return checkClick( k, x, y )
+    end
+
+    return nil
+end
+
+hook.add( "inputPressed", "nabuiClick", function( button )
+    if not render.isHUDActive() then return end
+    --Mouse1 = 107 Mouse2 = 108
+    if ( button ~= 107 ) then return end
+    local x, y = input.getCursorPos()
+    local panel = checkClick( class.__root, x, y )
+
+    if panel ~= nil then
+        panel:doClick()
+    end
+end )
+
+return class

@@ -1,0 +1,19 @@
+local class = Class:extend( "nabui.TestBed" )
+
+Panel = import( "nabui.Panel" )
+Button = import( "nabui.Button" )
+
+function class:main()
+    if SERVER then return end
+
+    local u = Button:new()
+    function u:doClick()
+        print( "GREAT SUCCESS" )
+    end
+
+    hook.add( "hudconnected", "asdf", function()
+        u:makePopup()
+    end)
+end
+
+return class

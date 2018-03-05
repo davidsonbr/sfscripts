@@ -4,15 +4,4 @@
 --@include /nabfw.lua.txt
 require( "/nabfw.lua.txt" )
 
-if CLIENT then
-    Main = Class:extend()
-    function Main:draw()
-        render.drawCircle( 5, 5, 20 )
-    end
-    
-    function Main:main()
-        hook.add( "render", "asdf", Main.draw )
-    end
-end
-
-main( Main )
+main("nabui.TestBed")
