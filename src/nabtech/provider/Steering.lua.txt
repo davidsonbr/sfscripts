@@ -1,6 +1,4 @@
-local c = import( "nabtech.provider.Base" ):extend()
-
-c.type = "nabtech.provider.Steering"
+local c = import( "nabtech.provider.Base" ):extend( "nabtech.provider.Steering" )
 
 if SERVER then
 	function c:ctor( name, data )

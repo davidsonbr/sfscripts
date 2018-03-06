@@ -1,4 +1,4 @@
-Nabtech = Class:extend()
+Nabtech = Class:extend( "nabtech.Nabtech" )
 local c = Nabtech
 
 Nabtech.Entity = import( "nabtech.Entity" )
@@ -139,10 +139,6 @@ function c:loadVehicle( data )
 	end
 	
 	__load( data.data, Nabtech.Entity.get( "chip" ) )
-end
-
-function c:__tostring()
-	return "nabtech.Nabtech"
 end
 
 return c

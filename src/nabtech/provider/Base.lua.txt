@@ -1,17 +1,11 @@
-local c = Class:extend()
+local c = Class:extend( "nabtech.provider.Base" )
 
 c.providers = {}
-
-c.type = "nabtech.provider.Base"
 
 c.hook = {}
 c.timer = {}
 if CLIENT then
 	c.input = {	pressed = {}, released = {} }
-end
-
-function c:__tostring()
-	return self.type
 end
 
 function c:ctor( name, data )
@@ -26,7 +20,7 @@ function c:init( ent )
 	self.ent = ent
 
 	for k, v in pairs( self.hook or {} ) do
-		hook.add( k, "[nabtech.Provider]" .. self.type .. self.name .. self.ent:entIndex(), function( ... )
+		hook.add( k, "[nabtech.Provider]" .. self.__name .. self.name .. self.ent:entIndex(), function( ... )
 			if #{ ... } == 0 then
 				v( self )
 				return
@@ -38,7 +32,7 @@ function c:init( ent )
 	for k, v in pairs( self.timer or {} ) do
 		local time = v[ 1 ]
 		local func = v[ 2 ]
-		timer.create( "[nabtech.Provider]" .. k .. self.type .. self.name .. self.ent:entIndex(), time, 0, function()
+		timer.create( "[nabtech.Provider]" .. k .. self.__name .. self.name .. self.ent:entIndex(), time, 0, function()
 			func( self )
 		end )
 	end
@@ -57,7 +51,7 @@ function c:init( ent )
 		end
 		
 		if _countPressed > 0 then
-			hook.add( "inputPressed", "[nabtech.Provider]" .. self.type .. self.name .. self.ent:entIndex(), function( id )
+			hook.add( "inputPressed", "[nabtech.Provider]" .. self.__name .. self.name .. self.ent:entIndex(), function( id )
 				local key = input.getKeyName( id )
 				local func = self.input.pressed[ key ]
 				if func then
@@ -65,8 +59,9 @@ function c:init( ent )
 				end
 			end )
 		end
+
 		if _countReleased > 0 then
-			hook.add( "inputReleased", "[nabtech.Provider]" .. self.type .. self.name .. self.ent:entIndex(), function( id )
+			hook.add( "inputReleased", "[nabtech.Provider]" .. self.__name .. self.name .. self.ent:entIndex(), function( id )
 				local key = input.getKeyName( id )
 				local func = self.input.released[ key ]
 				if func then
@@ -79,13 +74,13 @@ end
 
 function c:deinit()
 	local id = self.ent:entIndex()
-	local hookid = self.type .. self.name .. id
+	local hookid = self.__name .. self.name .. id
 	for k, v in pairs( self.hook ) do
 		hook.remove( k, "[nabtech.Provider]" .. hookid )
 	end
 	
 	for k, v in pairs( self.timer ) do
-		timer.remove( "[nabtech.Provider]" .. k .. self.type .. self.name .. self.ent:entIndex() )
+		timer.remove( "[nabtech.Provider]" .. k .. self.__name .. self.name .. self.ent:entIndex() )
 	end
 	
 	if CLIENT then

@@ -1,4 +1,4 @@
-local c = Class:extend()
+local c = Class:extend( "nabtech.Entity" )
 
 c.entities = {}
 
@@ -67,7 +67,7 @@ function c:removeProvider( name )
 	end
 end
 
-function c:__tostring()
+function c:tostring()
 	return self.longname
 end
 

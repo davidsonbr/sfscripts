@@ -39,8 +39,7 @@ function class:toString()
 end
 
 function class:getPos()
-    if ( self == class.__root ) then return self.pos end
-    return self.pos + self.parent:getPos()
+    return self.pos
 end
 
 function class:setPos( pos )
@@ -75,10 +74,13 @@ local function drawPanels( panel )
     panel = panel or class.__root
     if ( not panel.visible ) then return end
 
+    local mat = VMatrix():setTranslation( panel.pos )
+    render.pushMatrix( mat )
     panel:draw()
     for k, _ in pairs( panel.children ) do
         drawPanels( k )
     end
+    render.popMatrix()
 end
 hook.add( "postdrawhud", "nabuidraw", drawPanels )
 

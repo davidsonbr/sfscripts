@@ -6,27 +6,29 @@ function class:ctor()
     self.base.ctor( self )
 
     self.size = Vector( 50, 20 )
+    self.enabled = true
+    self.text = "Button"
 end
 
 function class:isDown()
-
+    return false
 end
 
 function class:doClick()
 
 end
 
-function class:setEnabled()
-
+function class:setEnabled( enabled )
+    self.enabled = enabled
 end
 
-function class:setDisabled()
-
+function class:setDisabled( disabled )
+    self.enabled = not disabled
 end
 
 function class:draw()
     local pos = self:getPos()
-    render.drawRect( pos.x, pos.y, self.size.x, self.size.y )
+    render.drawRect( 0, 0, self.size.x, self.size.y )
 end
 
 local function checkClick( panel, x, y )
@@ -39,11 +41,13 @@ local function checkClick( panel, x, y )
     end
 
     for k, v in pairs( panel.children ) do
-        return checkClick( k, x, y )
+        return checkClick( k, x - panel.pos.x, y - panel.pos.y )
     end
 
     return nil
 end
+
+local clicked
 
 hook.add( "inputPressed", "nabuiClick", function( button )
     if not render.isHUDActive() then return end
@@ -53,7 +57,18 @@ hook.add( "inputPressed", "nabuiClick", function( button )
     local panel = checkClick( class.__root, x, y )
 
     if panel ~= nil then
+        clicked = panel
         panel:doClick()
+        panel.isDown = function() return true end
+    end
+end )
+
+hook.add( "inputReleased", "nabuiClickRelease", function( button )
+    if not render.isHUDActive() then return end
+    if ( button ~= 107 ) then return end
+
+    if clicked ~= nil then
+        clicked.isDown = function() return false end
     end
 end )
 
