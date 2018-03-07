@@ -1,0 +1,44 @@
+if SERVER then return end -- Client side only
+
+local class = import( "nabui.Button" ):extend( "nabui.Checkbox" )
+
+function class:ctor( parent )
+    class.base.ctor( self, parent )
+
+    self.size = Vector( 16, 16 )
+    self.enabled = true
+    self.active = false
+    self.text = nil
+end
+
+class.isDown = nil
+
+function class:isActive()
+    return self.active
+end
+
+function class:__doClick( x, y )
+    if self.enabled then
+        self.active = not self.active
+        self:doClick( self.active )
+    end
+end
+
+function class:doClick( active ) end
+
+class.setSize = nil
+class.getSize = nil
+
+function class:draw()
+    if self.enabled then
+        if self.active then
+            self.skin.textures.checkbox.checked( 0, 0, self.size.x, self.size.y )
+        else
+            self.skin.textures.checkbox.unchecked( 0, 0, self.size.x, self.size.y )
+        end
+    else
+        self.skin.textures.button.disabled( 0, 0, self.size.x, self.size.y )
+    end
+end
+
+return class

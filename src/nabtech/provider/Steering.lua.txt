@@ -48,12 +48,12 @@ if SERVER then
 			end
 		end )
 		
-		c.super.init( self, ent )
+		c.base.init( self, ent )
 	end
 	
 	function c:deinit( ent )
 		net.remove( "[nabtech.Provider.Steering] turn." .. ent:entIndex() )
-		c.super.deinit( self )
+		c.base.deinit( self )
 	end
 	
 	c.hook = {

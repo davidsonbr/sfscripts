@@ -1,15 +1,33 @@
 local class = Class:extend( "nabui.TestBed" )
 
-Panel = import( "nabui.Panel" )
-Button = import( "nabui.Button" )
+F = import( "nabui.Frame" )
+P = import( "nabui.Progressbar" )
+B = import( "nabui.Button" )
+C = import( "nabui.Checkbox" )
 
 function class:main()
     if SERVER then return end
 
-    local u = Button:new()
-    function u:doClick()
-        print( "GREAT SUCCESS" )
+    local u = F:new()
+    u:setSize( Vector( 512, 512 ) )
+
+    local c = C:new( u )
+    c:setPos( Vector( 16, 32 ) )
+
+    local p = P:new( u )
+    p:setPos( Vector( 48, 32 ) )
+
+    local b = B:new( u )
+    b:setPos( Vector( 16, 64 ) )
+    function b:doClick()
+        print( "CLACK" )
     end
+
+    hook.add( "predrawhud", "asdf", function()
+        if c:isActive() then
+            p:setProgress( (p:getProgress() + .01) % 1 )
+        end
+    end)
 
     hook.add( "hudconnected", "asdf", function()
         u:makePopup()

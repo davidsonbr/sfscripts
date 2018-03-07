@@ -1,9 +1,9 @@
 if SERVER then return end -- Client side only
 
-local class = import( "nabui.Panel" ):extend( "nabui.Button" )
+local class = import( "nabui.base.Panel" ):extend( "nabui.Button" )
 
-function class:ctor()
-    self.base.ctor( self )
+function class:ctor( parent )
+    class.base.ctor( self, parent )
 
     self.size = Vector( 50, 20 )
     self.enabled = true
@@ -11,11 +11,22 @@ function class:ctor()
 end
 
 function class:isDown()
-    return false
+    return self.__clicked
+end
+
+function class:__doClick( x, y )
+    if self.enabled then
+        self.__clicked = true
+        self:doClick()
+
+        hook.add( "inputReleased", "nabuiButton" .. tostring( self ), function()
+            self.__clicked = false
+            hook.remove( "inputReleased", "nabuiButton" .. tostring( self ) )
+        end )
+    end
 end
 
 function class:doClick()
-
 end
 
 function class:setEnabled( enabled )
@@ -27,49 +38,17 @@ function class:setDisabled( disabled )
 end
 
 function class:draw()
-    local pos = self:getPos()
-    render.drawRect( 0, 0, self.size.x, self.size.y )
-end
-
-local function checkClick( panel, x, y )
-    if panel:isInstanceOf( class ) then
-        if x >= panel.pos.x and x <= panel.pos.x + panel.size.x then
-            if y >= panel.pos.y and y <= panel.pos.y + panel.size.y then
-                return panel
-            end
+    if self.enabled then
+        if self.__clicked then
+            self.skin.textures.button.clicked( 0, 0, self.size.x, self.size.y )
+        else
+            self.skin.textures.button.enabled( 0, 0, self.size.x, self.size.y )
         end
+    else
+        self.skin.textures.button.disabled( 0, 0, self.size.x, self.size.y )
     end
-
-    for k, v in pairs( panel.children ) do
-        return checkClick( k, x - panel.pos.x, y - panel.pos.y )
-    end
-
-    return nil
+    local w, h = render.getTextSize( self.text )
+    render.drawText( ( self.size.x - w ) / 2, ( self.size.y - h ) / 2, self.text )
 end
-
-local clicked
-
-hook.add( "inputPressed", "nabuiClick", function( button )
-    if not render.isHUDActive() then return end
-    --Mouse1 = 107 Mouse2 = 108
-    if ( button ~= 107 ) then return end
-    local x, y = input.getCursorPos()
-    local panel = checkClick( class.__root, x, y )
-
-    if panel ~= nil then
-        clicked = panel
-        panel:doClick()
-        panel.isDown = function() return true end
-    end
-end )
-
-hook.add( "inputReleased", "nabuiClickRelease", function( button )
-    if not render.isHUDActive() then return end
-    if ( button ~= 107 ) then return end
-
-    if clicked ~= nil then
-        clicked.isDown = function() return false end
-    end
-end )
 
 return class

@@ -9,7 +9,7 @@ end
 function c:ctor( name, ent, parent )
 	self.name = name
 	self.ent = ent
-	
+
 	self.parent = parent
 	if self.parent then
 		self.longname = parent:__tostring() .. "." .. self.name
@@ -67,7 +67,7 @@ function c:removeProvider( name )
 	end
 end
 
-function c:tostring()
+function c:toString()
 	return self.longname
 end
 

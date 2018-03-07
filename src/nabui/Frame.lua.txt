@@ -1,15 +1,47 @@
 if SERVER then return end -- Client side only
 
-local class = import( "nabui.Panel" ):extend( "nabui.Frame" )
+local class = import( "nabui.base.Panel" ):extend( "nabui.Frame" )
+local button = import( "nabui.Button" )
 
 function class:ctor( parent )
-    self.base.ctor( self, parent )
-    self.size = Vector( 10, 10 )
+    class.base.ctor( self, parent )
+    self.size = Vector( 100, 100 )
+    self.title = "Sample Text"
 end
 
 function class:draw()
-    local pos = self:getPos()
-    render.drawRect( 0, 0, self.size.x, self.size.y )
+    self.skin.textures.window.default( 0, 0, self.size.x, self.size.y )
+    self.skin.textures.window.button.close( self.size.x - 20, 0, 16, 16 )
+    render.drawText( 8, -1, self.title )
+end
+
+function class:__doClick( x, y )
+    --X Button
+    if ( x >= self.size.x - 16 and x <= self.size.x - 8 ) then
+        if ( y >= 3 and y <= 12 ) then
+            self:delete()
+        end
+    end
+
+    --Click and drag
+    if ( y >= 0 and y <= 16 ) then
+        self.__dragstart = { self.pos, Vector( input.getCursorPos() ) }
+        hook.add( "predrawhud", "nabuiDrag" .. tostring( self ), function()
+            local newpos = Vector( input.getCursorPos() )
+            local delta = newpos - self.__dragstart[ 2 ]
+            self.pos = self.__dragstart[ 1 ] + delta
+        end )
+
+        hook.add( "inputReleased", "nabuiClickRelease" .. tostring( self ), function( button )
+            if not render.isHUDActive() then return end
+            if ( button ~= 107 ) then return end
+            local newpos = Vector( input.getCursorPos() )
+            local delta = newpos - self.__dragstart[ 2 ]
+            self.pos = self.__dragstart[ 1 ] + delta
+            hook.remove( "inputReleased", "nabuiClickRelease" .. tostring( self ) )
+            hook.remove( "predrawhud", "nabuiDrag" .. tostring( self ) )
+        end )
+    end
 end
 
 function class:getSize()

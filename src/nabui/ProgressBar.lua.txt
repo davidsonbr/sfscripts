@@ -1,0 +1,32 @@
+if SERVER then return end -- Client side only
+
+local class = import( "nabui.Panel" ):extend( "nabui.ProgressBar" )
+
+function class:ctor( parent )
+    class.base.ctor( self, parent )
+    self.size = Vector( 32, 16 )
+    self.progress = 0
+end
+
+function class:draw()
+    self.skin.textures.progressbar.empty( 0, 0, self.size.x, self.size.y )
+    self.skin.textures.progressbar.full( 0, 0, self.size.x * self.progress, self.size.y )
+end
+
+function class:getProgress()
+    return self.progress
+end
+
+function class:setProgress( prog )
+    self.progress = prog
+end
+
+function class:getSize()
+    return self.size
+end
+
+function class:setSize( size )
+    self.size = size
+end
+
+return class

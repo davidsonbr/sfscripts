@@ -1,0 +1,142 @@
+if SERVER then return end -- Client side only
+
+local class = Class:extend( "nabui.base.Panel" )
+
+function class:ctor( parent )
+    if parent == nil and class.__root ~= nil then
+        self.__root.children[ self ] = true
+    elseif parent then
+        parent.children[ self ] = true
+    end
+
+    self.parent = parent or class.__root or self
+    self.children = {}
+    self.visible = true
+    self.skin = import( "nabui.PanelTexture" )
+
+    self.pos = Vector( 0, 0 )
+end
+
+function class:__newindex( key, value )
+    if self == class.__root then return end
+    rawset( self, key, value )
+end
+
+function class:draw()
+
+end
+
+function class:delete()
+    if self ~= class.__root then
+        self.parent.children[ self ] = nil
+        self.parent = nil
+        for k, _ in pairs( self.children ) do
+            k:delete()
+        end
+    end
+    self.__deleted = true
+    if self.__enabledCursor then
+        input.enableCursor( false )
+    end
+end
+
+function class:toString()
+    return "Panel@" .. self.__id
+end
+
+function class:getPos()
+    return self.pos
+end
+
+function class:setPos( pos )
+    if ( self == class.__root ) then return end
+    self.pos = pos
+end
+
+function class:isVisible()
+    if ( self == class.__root ) then return true end
+    return self.visible and self.parent:isVisible()
+end
+
+function class:setVisible( visible )
+    if ( self == class.__root ) then return end
+    self.visible = visible
+end
+
+function class:makePopup()
+    local p = self
+
+    while p ~= class.__root and p ~= nil do
+        p:setVisible( true )
+        p = p.parent
+    end
+
+    if not self.__deleted then
+        self.__enabledCursor = true
+        input.enableCursor( true )
+    end
+end
+
+function class:setSkin( skinName )
+    self.skin = import( skinName )
+end
+
+class.__root = class:new()
+
+local function drawPanels( panel )
+    panel = panel or class.__root
+    if ( not panel.visible ) then return end
+
+    local mat = Matrix()
+    mat:setTranslation( panel.pos )
+
+    render.pushMatrix( mat )
+    panel:draw()
+    for k, _ in pairs( panel.children ) do
+        drawPanels( k )
+    end
+    render.popMatrix()
+end
+hook.add( "postdrawhud", "nabuidraw", drawPanels )
+
+local function checkClick( panel, x, y )
+    for k, v in pairs( panel.children ) do
+        local _p, _x, _y = checkClick( k, x - panel.pos.x, y - panel.pos.y )
+        if _p then return _p, _x, _y end
+    end
+
+    if panel:isInstanceOf( class ) and panel.size then
+        if x >= panel.pos.x and x <= panel.pos.x + panel.size.x then
+            if y >= panel.pos.y and y <= panel.pos.y + panel.size.y then
+                return panel, x - panel.pos.x, y - panel.pos.y
+            end
+        end
+    end
+
+    return nil
+end
+
+local clicked
+
+hook.add( "inputPressed", "nabuiClick", function( button )
+    if not render.isHUDActive() then return end
+    --Mouse1 = 107 Mouse2 = 108
+    if ( button ~= 107 ) then return end
+    local x, y = input.getCursorPos()
+    local panel, posX, posY = checkClick( class.__root, x, y )
+    if panel ~= nil then
+        clicked = panel
+        if panel.__doClick then
+            panel:__doClick( posX, posY )
+        end
+    end
+end )
+
+hook.add( "inputReleased", "nabuiClickRelease", function( button )
+    if not render.isHUDActive() then return end
+    if ( button ~= 107 ) then return end
+    if clicked then clicked = nil end
+end )
+
+
+return class

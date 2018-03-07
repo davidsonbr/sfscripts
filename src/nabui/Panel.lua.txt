@@ -1,87 +1,22 @@
 if SERVER then return end -- Client side only
 
-local class = Class:extend( "nabui.Panel" )
+local class = import( "nabui.base.Panel" ):extend( "nabui.Panel" )
 
 function class:ctor( parent )
-    if parent == nil and class.__root ~= nil then
-        self.__root.children[ self ] = true
-    elseif parent then
-        parent.children[ self ] = true
-    end
-
-    self.parent = parent or class.__root or self
-    self.children = {}
-    self.visible = true
-
-    self.pos = Vector( 0, 0 )
-end
-
-function class:__newindex( key, value )
-    if self == class.__root then return end
-    rawset( self, key, value )
+    class.base.ctor( self, parent )
+    self.size = Vector( 64, 64 )
 end
 
 function class:draw()
+
 end
 
-function class:delete()
-    if self ~= class.__root then
-        self.parent.children[ self ] = nil
-        self.parent = nil
-        for k, _ in pairs( self.children ) do
-            k:delete()
-        end
-    end
+function class:getSize()
+    return self.size
 end
 
-function class:toString()
-    return "Panel@" .. self.__id
+function class:setSize( size )
+    self.size = size
 end
-
-function class:getPos()
-    return self.pos
-end
-
-function class:setPos( pos )
-    if ( self == class.__root ) then return end
-    self.pos = pos
-end
-
-function class:isVisible()
-    if ( self == class.__root ) then return true end
-    return self.visible and self.parent:isVisible()
-end
-
-function class:setVisible( visible )
-    if ( self == class.__root ) then return end
-    self.visible = visible
-end
-
-function class:makePopup()
-    local p = self
-
-    while p ~= class.__root do
-        p:setVisible( true )
-        p = p.parent
-    end
-
-    input.enableCursor( true )
-end
-
-class.__root = class:new()
-
-local function drawPanels( panel )
-    panel = panel or class.__root
-    if ( not panel.visible ) then return end
-
-    local mat = VMatrix():setTranslation( panel.pos )
-    render.pushMatrix( mat )
-    panel:draw()
-    for k, _ in pairs( panel.children ) do
-        drawPanels( k )
-    end
-    render.popMatrix()
-end
-hook.add( "postdrawhud", "nabuidraw", drawPanels )
 
 return class

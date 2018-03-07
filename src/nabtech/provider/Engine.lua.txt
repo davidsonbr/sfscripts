@@ -32,13 +32,13 @@ if SERVER then
 		self.entcontroller = Nabtech.Entity.get( self.podcontroller ).ent:getWirelink()
 		self.entdriverseat = Nabtech.Entity.get( self.driverseat )
 		
-		c.super.init( self, ent )
+		c.base.init( self, ent )
 	end
 	
 	function c:deinit()
 		net.remove( "[nabtech.Nabtech.Engine] accelerate." .. self.ent:entIndex() )
 		
-		c.super.deinit( self )
+		c.base.deinit( self )
 	end
 	
 	

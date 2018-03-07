@@ -1,0 +1,129 @@
+if SERVER then return end
+local class = Class:extend( "nabui.PanelTexture" )
+
+class.name = "Default Skin"
+class.author = "Wetnab"
+
+class.texture = render.loadTexture( "materials/nabui/default.png" )
+
+--- Create a border rectangle definition
+function class:textureBorder( x, y, w, h, left, top, right, bottom )
+    x = x / 512
+    y = y / 512
+    w = w / 512
+    h = h / 512
+    left = left / 512
+    top = top / 512
+    right = right / 512
+    bottom = bottom / 512
+
+    local c = self
+    local uvs = {
+        tl = {
+            x, y, x + left, y + top
+        },
+        t = {
+            x + left, y, x + w - right, y + top
+        },
+        tr = {
+            x + w - right, y, x + w, y + top
+        },
+        l = {
+            x, y + top, x + left, y + h - bottom
+        },
+        c = {
+            x + left, y + top, x + w - right, y + h - bottom
+        },
+        r = {
+            x + w - right, y + top, x + w, y + h - bottom
+        },
+        bl = {
+            x, y + h - bottom, x + left, y + h
+        },
+        b = {
+            x + left, y + h - bottom, x + w - right, y + h
+        },
+        br = {
+            x + w - right, y + h - bottom, x + w, y + h
+        }
+    }
+
+    return function( _x, _y, _w, _h, color )
+        render.setTexture( c.texture )
+        if ( color ~= nil ) then render.setColor( color ) end
+
+        render.drawTexturedRectUV( _x, _y, left * 512, top * 512, uvs.tl[ 1 ], uvs.tl[ 2 ], uvs.tl[ 3 ], uvs.tl[ 4 ] ) --TL
+        render.drawTexturedRectUV( _x + left * 512, _y, _w - ( left + right ) * 512, top * 512, uvs.t[ 1 ], uvs.t[ 2 ], uvs.t[ 3 ], uvs.t[ 4 ] ) --T
+        render.drawTexturedRectUV( _x + _w - right * 512, _y, right * 512, top * 512, uvs.tr[ 1 ], uvs.tr[ 2 ], uvs.tr[ 3 ], uvs.tr[ 4 ] ) --TR
+
+        render.drawTexturedRectUV( _x, _y + top * 512, left * 512, _h - ( top + bottom ) * 512, uvs.l[ 1 ], uvs.l[ 2 ], uvs.l[ 3 ], uvs.l[ 4 ] ) --L
+        render.drawTexturedRectUV( _x + left * 512, _y + top * 512, _w - ( left + right ) * 512, _h - ( top + bottom ) * 512, uvs.c[ 1 ], uvs.c[ 2 ], uvs.c[ 3 ], uvs.c[ 4 ] ) --C
+        render.drawTexturedRectUV( _x + _w - right * 512, _y + top * 512, right * 512, _h - ( top + bottom ) * 512, uvs.r[ 1 ], uvs.r[ 2 ], uvs.r[ 3 ], uvs.r[ 4 ] ) --R
+
+        render.drawTexturedRectUV( _x, _y + _h - bottom * 512, left * 512, bottom * 512, uvs.bl[ 1 ], uvs.bl[ 2 ], uvs.bl[ 3 ], uvs.bl[ 4 ] ) --BL
+        render.drawTexturedRectUV( _x + left * 512, _y + _h - bottom * 512, _w - ( left + right ) * 512, bottom * 512, uvs.b[ 1 ], uvs.b[ 2 ], uvs.b[ 3 ], uvs.b[ 4 ] ) --B
+        render.drawTexturedRectUV( _x + _w - right * 512, _y + _h - bottom * 512, right * 512, bottom * 512, uvs.br[ 1 ], uvs.br[ 2 ], uvs.br[ 3 ], uvs.br[ 4 ] ) --BR
+
+        render.setTexture( nil )
+    end
+end
+
+--- Create a non scaled rectangle definition
+function class:textureCenter( x, y, w, h )
+    x = x / 512
+    y = y / 512
+    w = w / 512
+    h = h / 512
+
+    local c = self
+    return function( _x, _y, _w, _h, color )
+        render.setTexture( c.texture )
+        if ( color ~= nil ) then render.setColor( color ) end
+
+        render.drawTexturedRectUV( _x - ( _w - w * 512 ) / 2, _y - ( _h - h * 512 ) / 2, w * 512, h * 512, x, y, x + w, y + h )
+
+        render.setTexture( nil )
+    end
+end
+
+--- Create a scaled rectangle definition
+function class:textureNormal( x, y, w, h )
+    x = x / 512
+    y = y / 512
+    w = w / 512
+    h = h / 512
+
+    local c = self
+    return function( _x, _y, _w, _h, color )
+        render.setTexture( c.texture )
+        if ( color ~= nil ) then render.setColor( color ) end
+
+        render.drawTexturedRectUV( _x, _y, _w, _h, x, y, x + w, y + h )
+
+        render.setTexture( nil )
+    end
+end
+
+class.textures = {}
+class.textures.test = class:textureNormal( 0, 0, 512, 512 )
+
+class.textures.window = {}
+class.textures.window.default = class:textureBorder( 0, 0, 48, 48, 16, 17, 16, 16 )
+class.textures.window.button = {}
+class.textures.window.button.close = class:textureCenter( 0, 48, 16, 16 )
+
+class.textures.button = {}
+class.textures.button.enabled = class:textureNormal( 49, 1, 14, 14 )
+class.textures.button.clicked = class:textureNormal( 49, 17, 14, 14 )
+class.textures.button.disabled = class:textureNormal( 49, 33, 14, 14 )
+
+class.textures.checkbox = {}
+class.textures.checkbox.unchecked = class:textureNormal( 65, 1, 14, 14 )
+class.textures.checkbox.checked = class:textureNormal( 65, 17, 14, 14 )
+class.textures.checkbox.disabled = class:textureNormal( 65, 33, 14, 14 )
+
+class.textures.progressbar = {}
+class.textures.progressbar.full = class:textureNormal( 81, 1, 14, 14 )
+class.textures.progressbar.empty = class:textureNormal( 81, 17, 14, 14 )
+
+return class
