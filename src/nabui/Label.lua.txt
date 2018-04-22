@@ -1,0 +1,27 @@
+if SERVER then return end -- Client side only
+
+local class = import( "nabui.base.Panel" ):extend( "nabui.Label" )
+
+function class:ctor( parent )
+    class.base.ctor( self, parent )
+
+    self.text = "Label"
+    self.size = Vector( render.getTextSize( self.text ) )
+end
+
+function class:getText()
+    return self.text
+end
+
+function class:setText( text )
+    self.text = text
+    self.size = Vector( render.getTextSize( self.text ) )
+end
+
+class.setSize = nil
+
+function class:draw()
+    render.drawText( self.pos.x, self.pos.y, self.text )
+end
+
+return class

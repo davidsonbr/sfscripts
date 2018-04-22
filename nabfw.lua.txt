@@ -1,6 +1,23 @@
 --@author wetnab
 --@name Nab Framework
 
+Script = Script or {
+	name = "",
+	author = "",
+	author_id = "",
+	authorized = nil,
+	client = true,
+	server = true,
+	main = "",
+	args = {}
+}
+
+if ( authorized ~= nil ) then
+	if ( not authorized[ owner():steamID64() ] ) then
+		error( "Whoever spawned this chip should ask for permission to use other peoples' dupes" )
+	end
+end
+
 --[[BEGIN TYPE LIBRARY]]--
 function checkType( value, expected )
 	local t = type( value ):lower()
@@ -105,6 +122,8 @@ local function __netProcess()
 			__net.writeBit( v.origin ) --Where the message was sent from
 			__net.writeInt( v.from, 32 ) --Sender ent
 			__net.writeInt( v.to, 32 ) --Target ent
+			__net.writeInt( v.remote, 32 ) --Remote ent
+
 			if v.data then
 				__net.writeUInt( #v.data, 32 ) --Length of compressed data
 				__net.writeData( v.data, #v.data ) --Compressed data
@@ -128,13 +147,14 @@ local function __netProcess()
 	end
 end
 
-local function __send( name, origin, from, to, data )
+local function __send( name, origin, from, to, data, remote )
 	__netQueue[ #__netQueue + 1 ] = {
 		name = name,
 		origin = origin,
 		from = from,
 		to = to,
-		data = data
+		data = data,
+		remote = remote,
 	}
 	
 	hook.add( "think", "__nabNet", __netProcess )
@@ -144,8 +164,10 @@ end
 -- @param name Net message name
 -- @param data Table to send
 -- @param ply Player to send message to
-function net.send( name, data, ply )
-	__send( fastlz.compress( name ), SERVER, CLIENT and player():entIndex() or -1, isValid( ply ) and ply:entIndex() or -1, fastlz.compress( von.serialize( data or {} ) ) )
+-- @param remote Remote chip to send to
+function net.send( name, data, ply, remote )
+	__send( fastlz.compress( name ), SERVER, CLIENT and player():entIndex() or -1, isValid( ply ) and ply:entIndex() or -1,
+		fastlz.compress( von.serialize( data or {} ) ), isValid( remote ) and remote:entIndex() or -1 )
 end
 
 local __netCallbacks = {}
@@ -176,6 +198,8 @@ hook.add( "net", "nabnet", function( name, len, ply )
 		local origin = __net.readBit() == true
 		local from = __net.readInt( 32 )
 		local to = __net.readInt( 32 )
+		local remote = __net.readInt( 32 )
+
 		local datalen = __net.readUInt( 32 )
 		local data
 		if datalen > 0 then
@@ -185,10 +209,38 @@ hook.add( "net", "nabnet", function( name, len, ply )
 		if SERVER and to ~= -1 then
 			__send( name, origin, from, to, data )
 		else
-			if __netCallbacks[ name ] then
-				__netCallbacks[ name ]( fastlz.decompress( name ), data and von.deserialize( fastlz.decompress( data ) ) or {}, entity( from ) )
+			if ( remote == -1 or remote == chip():entIndex() ) then
+				if __netCallbacks[ name ] then
+					__netCallbacks[ name ]( fastlz.decompress( name ), data and von.deserialize( fastlz.decompress( data ) ) or {}, entity( from ) )
+				end
+			else
+				hook.runRemote( remote ~= -1 and entity( remote ) or chip(), "nabnet", fastlz.decompress( name ), data and von
+					.deserialize( fastlz.decompress( data ) ) or {}, entity( from ) )
 			end
 		end
+	end
+end )
+
+hook.add( "remote", "handleremote", function( chip, ply, name, ... )
+	hook.run( "remote." .. name, chip, ply, unpack( {...} ) )
+end )
+
+local chips = {}
+
+hook.add( "remote.spawn", "nabspawned", function( chip, ply, name )
+	chips[ chip ] = name
+	hook.runRemote( chip, "discover", Script.name )
+end )
+
+hook.add( "remote.discover", "nabdiscover", function( chip, ply, name )
+	chips[ chip ] = name
+end )
+
+hook.runRemote( nil, "spawn" )
+
+hook.add( "remote.nabnet", "nabnet", function( chip, ply, name, data, sender )
+	if __netCallbacks[ name ] then
+		__netCallbacks[ name ]( fastlz.decompress( name ), data and von.deserialize( fastlz.decompress( data ) ) or {}, entity( from ) )
 	end
 end )
 --[[END NET LIBRARY]]--
